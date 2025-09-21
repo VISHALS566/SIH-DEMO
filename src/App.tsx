@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginPage } from "./components/Auth/LoginPage";
 import { Navigation } from "./components/Layout/Navigation";
 import { Dashboard } from "./components/Dashboard/Dashboard";
@@ -7,26 +7,12 @@ import { SpotlightGallery } from "./components/Features/SpotlightGallery";
 import { ClubsPage } from "./components/Features/ClubsPage";
 import { MentorshipPage } from "./components/Features/MentorshipPage";
 import { AdminPage } from "./components/Features/AdminPage";
+import { Chat } from "./components/Features/Chat";
+import { Toaster } from "./components/Layout/Toaster";
 import { ApprovalsPage } from "./components/Features/ApprovalsPage";
-
-type User = {
-  email: string;
-  userType:
-    | "student"
-    | "alumni"
-    | "faculty"
-    | "admin"
-    | "recruiter";
-  linkedinProfile: string;
-  currentPosition?: string;
-  company?: string;
-  graduationYear?: string;
-  department?: string;
-  interests: string[];
-  status?: "active" | "pending" | "suspended" | "under_review";
-  approvedBy?: string;
-  approvedAt?: string;
-};
+import { authService } from "./services/authService";
+import { wsService } from "./services/wsService";
+import type { User } from "./types/User";
 
 type CurrentPage =
   | "dashboard"
@@ -41,29 +27,55 @@ type CurrentPage =
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [currentPage, setCurrentPage] =
-    useState<CurrentPage>("dashboard");
+  const [currentPage, setCurrentPage] = useState<CurrentPage>("dashboard");
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleLogin = (userType: string, userData: any) => {
-    const newUser: User = {
-      email: userData.email,
-      userType: userType as User["userType"],
-      linkedinProfile: userData.linkedinProfile,
-      currentPosition: userData.currentPosition,
-      company: userData.company,
-      graduationYear: userData.graduationYear,
-      department: userData.department,
-      interests: userData.interests,
-      status: userData.status,
-      approvedBy: userData.approvedBy,
-      approvedAt: userData.approvedAt,
+  // Check for existing authentication on app load
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        if (authService.isAuthenticated()) {
+          const userProfile = await authService.getProfile();
+          setUser(userProfile);
+          
+          // Connect to WebSocket for real-time features
+          try {
+            await wsService.connect();
+          } catch (error) {
+            console.warn('Failed to connect to WebSocket:', error);
+          }
+        }
+      } catch (error) {
+        console.warn('Authentication check failed:', error);
+        // Clear invalid tokens
+        authService.logout();
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setUser(newUser);
+
+    checkAuth();
+  }, []);
+
+  const handleLogin = (loggedInUser: User) => {
+    setUser(loggedInUser);
+    
+    // Connect to WebSocket after successful login
+    wsService.connect().catch(error => {
+      console.warn('Failed to connect to WebSocket:', error);
+    });
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setCurrentPage("dashboard");
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.warn('Logout error:', error);
+    } finally {
+      wsService.disconnect();
+      setUser(null);
+      setCurrentPage("dashboard");
+    }
   };
 
   const handleOpenDMs = () => {
@@ -120,16 +132,8 @@ export default function App() {
       case "dms":
         return (
           <div className="container mx-auto p-6">
-            <div className="text-center py-12">
-              <h2 className="text-2xl font-semibold mb-4">
-                Direct Messages
-              </h2>
-              <p className="text-muted-foreground">
-                Direct messaging feature coming soon. Connect
-                with your network through posts and comments for
-                now.
-              </p>
-            </div>
+            <h2 className="text-2xl font-semibold mb-6">Direct Messages</h2>
+            <Chat currentUser={user} />
           </div>
         );
       case "profile":
@@ -151,8 +155,24 @@ export default function App() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
-    return <LoginPage onLogin={handleLogin} />;
+    return (
+      <>
+        <LoginPage onLogin={handleLogin} />
+        <Toaster />
+      </>
+    );
   }
 
   return (
@@ -247,6 +267,7 @@ export default function App() {
       <main className="min-h-[calc(100vh-8rem)]">
         {renderCurrentPage()}
       </main>
+      <Toaster />
     </div>
   );
 }

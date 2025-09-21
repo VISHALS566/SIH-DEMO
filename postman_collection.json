@@ -1,0 +1,657 @@
+{
+  "info": {
+    "name": "Alumni Platform API",
+    "description": "Complete API collection for Alumni Platform with authentication, posts, events, mentorship, crowdfunding, and chat features",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"first_name\": \"Test\",\n  \"last_name\": \"User\",\n  \"password\": \"TestPass123!\",\n  \"password_confirm\": \"TestPass123!\",\n  \"user_type\": \"student\",\n  \"linkedin_profile\": \"https://linkedin.com/in/testuser\",\n  \"phone_number\": \"+1234567890\",\n  \"bio\": \"I am a test user\",\n  \"interests_data\": [\"Technology\", \"Programming\", \"Data Science\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.tokens.access);",
+                  "    pm.collectionVariables.set('refresh_token', response.tokens.refresh);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"TestPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.tokens.access);",
+                  "    pm.collectionVariables.set('refresh_token', response.tokens.refresh);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/token/refresh/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "token", "refresh", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('access_token', response.access);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/profile/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile", ""]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated bio\",\n  \"phone_number\": \"+1987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile", ""]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"old_password\": \"TestPass123!\",\n  \"new_password\": \"NewPass123!\",\n  \"new_password_confirm\": \"NewPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/change-password/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "change-password", ""]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/logout/",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Get Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My First Post\",\n  \"content\": \"This is my first post on the alumni platform!\",\n  \"post_type\": \"general\",\n  \"tags\": [\"announcement\", \"general\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Post Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/1/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "1", ""]
+            }
+          }
+        },
+        {
+          "name": "Like Post",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/1/like/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "1", "like", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/1/comments/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "1", "comments", ""]
+            }
+          }
+        },
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Great post! Thanks for sharing.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/1/comments/",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "1", "comments", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Get Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/",
+              "host": ["{{base_url}}"],
+              "path": ["events", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Alumni Networking Event\",\n  \"description\": \"Join us for a networking event with fellow alumni\",\n  \"event_type\": \"networking\",\n  \"location\": \"Main Campus Auditorium\",\n  \"start_date\": \"2024-12-25T18:00:00Z\",\n  \"end_date\": \"2024-12-25T21:00:00Z\",\n  \"max_attendees\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events/",
+              "host": ["{{base_url}}"],
+              "path": ["events", ""]
+            }
+          }
+        },
+        {
+          "name": "Register for Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/1/register/",
+              "host": ["{{base_url}}"],
+              "path": ["events", "1", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Unregister from Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/1/unregister/",
+              "host": ["{{base_url}}"],
+              "path": ["events", "1", "unregister", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mentorship",
+      "item": [
+        {
+          "name": "Get Mentorship Programs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mentorship/programs/",
+              "host": ["{{base_url}}"],
+              "path": ["mentorship", "programs", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Mentorship Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mentor\": 2,\n  \"program_type\": \"career\",\n  \"message\": \"I would like to request mentorship for career guidance\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/mentorship/requests/",
+              "host": ["{{base_url}}"],
+              "path": ["mentorship", "requests", ""]
+            }
+          }
+        },
+        {
+          "name": "Accept Mentorship Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mentorship/requests/1/accept/",
+              "host": ["{{base_url}}"],
+              "path": ["mentorship", "requests", "1", "accept", ""]
+            }
+          }
+        },
+        {
+          "name": "Reject Mentorship Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/mentorship/requests/1/reject/",
+              "host": ["{{base_url}}"],
+              "path": ["mentorship", "requests", "1", "reject", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Crowdfunding",
+      "item": [
+        {
+          "name": "Get Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/crowdfunding/campaigns/",
+              "host": ["{{base_url}}"],
+              "path": ["crowdfunding", "campaigns", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Campaign",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Student Scholarship Fund\",\n  \"description\": \"Help fund scholarships for deserving students\",\n  \"category\": \"education\",\n  \"target_amount\": 50000.00,\n  \"start_date\": \"2024-12-01T00:00:00Z\",\n  \"end_date\": \"2024-12-31T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/crowdfunding/campaigns/",
+              "host": ["{{base_url}}"],
+              "path": ["crowdfunding", "campaigns", ""]
+            }
+          }
+        },
+        {
+          "name": "Make Donation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100.00,\n  \"message\": \"Great cause! Happy to support.\",\n  \"is_anonymous\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/crowdfunding/campaigns/1/donate/",
+              "host": ["{{base_url}}"],
+              "path": ["crowdfunding", "campaigns", "1", "donate", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Campaign Updates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/crowdfunding/campaigns/1/updates/",
+              "host": ["{{base_url}}"],
+              "path": ["crowdfunding", "campaigns", "1", "updates", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Get Chat Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/rooms/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "rooms", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/rooms/1/messages/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "rooms", "1", "messages", ""]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello! How are you doing?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/rooms/1/messages/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "rooms", "1", "messages", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Meeting Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/meeting-requests/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "meeting-requests", ""]
+            }
+          }
+        },
+        {
+          "name": "Approve Meeting Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/meeting-requests/1/approve/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "meeting-requests", "1", "approve", ""]
+            }
+          }
+        },
+        {
+          "name": "Reject Meeting Request",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/meeting-requests/1/reject/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "meeting-requests", "1", "reject", ""]
+            }
+          }
+        },
+        {
+          "name": "Get User Streak",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/streaks/",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "streaks", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alumni Features",
+      "item": [
+        {
+          "name": "Get Spotlights",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alumni/spotlights/",
+              "host": ["{{base_url}}"],
+              "path": ["alumni", "spotlights", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Clubs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alumni/clubs/",
+              "host": ["{{base_url}}"],
+              "path": ["alumni", "clubs", ""]
+            }
+          }
+        },
+        {
+          "name": "Join Club",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/alumni/clubs/1/join/",
+              "host": ["{{base_url}}"],
+              "path": ["alumni", "clubs", "1", "join", ""]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -6,21 +6,27 @@ import { Label } from "../ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 import { Badge } from "../ui/badge";
-import { Linkedin, GraduationCap, X } from "lucide-react";
+import { Linkedin, GraduationCap, X, Loader2 } from "lucide-react";
+import { authService, RegisterData, User } from "../../services/api";
+import { toast } from "sonner";
 
 interface LoginPageProps {
-  onLogin: (userType: string, userData: any) => void;
+  onLogin: (user: User) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [userType, setUserType] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
-    linkedinProfile: "",
-    currentPosition: "",
-    company: "",
-    graduationYear: "",
-    department: "",
+    first_name: "",
+    last_name: "",
+    password: "",
+    password_confirm: "",
+    linkedin_profile: "",
+    phone_number: "",
+    date_of_birth: "",
+    bio: "",
     interests: [] as string[]
   });
 
@@ -55,10 +61,44 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (userType && formData.email && formData.interests.length > 0) {
-      onLogin(userType, formData);
+    
+    if (!userType || !formData.email || !formData.first_name || !formData.last_name || !formData.password || formData.interests.length < 3) {
+      toast.error("Please fill in all required fields and select at least 3 interests");
+      return;
+    }
+
+    if (formData.password !== formData.password_confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const registerData: RegisterData = {
+        email: formData.email,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        password: formData.password,
+        password_confirm: formData.password_confirm,
+        user_type: userType as User['user_type'],
+        linkedin_profile: formData.linkedin_profile || undefined,
+        phone_number: formData.phone_number || undefined,
+        date_of_birth: formData.date_of_birth || undefined,
+        bio: formData.bio || undefined,
+        interests_data: formData.interests,
+      };
+
+      const result = await authService.register(registerData);
+      toast.success("Registration successful!");
+      onLogin(result.user);
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error(error instanceof Error ? error.message : "Registration failed");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,67 +144,87 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="first_name">First Name</Label>
+                <Input
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="last_name">Last Name</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password_confirm">Confirm Password</Label>
+                <Input
+                  id="password_confirm"
+                  type="password"
+                  value={formData.password_confirm}
+                  onChange={(e) => setFormData({ ...formData, password_confirm: e.target.value })}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="linkedin">LinkedIn Profile</Label>
               <div className="relative">
                 <Linkedin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="linkedin"
-                  value={formData.linkedinProfile}
-                  onChange={(e) => setFormData({ ...formData, linkedinProfile: e.target.value })}
+                  value={formData.linkedin_profile}
+                  onChange={(e) => setFormData({ ...formData, linkedin_profile: e.target.value })}
                   placeholder="linkedin.com/in/yourprofile"
                   className="pl-10"
                 />
               </div>
             </div>
 
-            {(userType === "alumni" || userType === "recruiter") && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="position">Current Position</Label>
-                  <Input
-                    id="position"
-                    value={formData.currentPosition}
-                    onChange={(e) => setFormData({ ...formData, currentPosition: e.target.value })}
-                    placeholder="Software Engineer, Product Manager, etc."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    placeholder="Google, Microsoft, etc."
-                  />
-                </div>
-              </>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Input
+                id="phone"
+                value={formData.phone_number}
+                onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
 
-            {(userType === "student" || userType === "alumni") && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="year">
-                    {userType === "alumni" ? "Graduation Year" : "Expected Graduation Year"}
-                  </Label>
-                  <Input
-                    id="year"
-                    value={formData.graduationYear}
-                    onChange={(e) => setFormData({ ...formData, graduationYear: e.target.value })}
-                    placeholder="2024"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Input
-                    id="department"
-                    value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    placeholder="Computer Science, Business, etc."
-                  />
-                </div>
-              </>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio (Optional)</Label>
+              <Input
+                id="bio"
+                value={formData.bio}
+                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                placeholder="Tell us about yourself..."
+              />
+            </div>
 
             {/* Interests Section */}
             <div className="space-y-3">
@@ -218,9 +278,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <Button 
               type="submit" 
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
-              disabled={!userType || !formData.email || formData.interests.length < 3}
+              disabled={!userType || !formData.email || !formData.first_name || !formData.last_name || !formData.password || formData.interests.length < 3 || isLoading}
             >
-              Join Alumni Network
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Join Alumni Network"
+              )}
             </Button>
           </form>
         </CardContent>

@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -13,18 +14,17 @@ import {
   Target,
   Flame
 } from "lucide-react";
-import { PostFeed } from "./PostFeed";
-import { QuickStats } from "./QuickStats";
+import { StreakAnimation } from "../Features/StreakAnimation";
 
 interface DashboardProps {
-  user: any;
+  user: User;
 }
 
 export function Dashboard({ user }: DashboardProps) {
-  const userType = user?.userType || 'student';
+  const userType = user?.user_type || 'student';
   
   const welcomeMessage = {
-    student: `Welcome back, ${user?.email?.split('@')[0]}! Keep up the great work.`,
+    student: `Welcome back, ${user?.first_name || user?.email?.split('@')[0]}! Keep up the great work.`,
     alumni: `Welcome back! Your experience is valuable to our community.`,
     faculty: `Welcome, Professor. Ready to mentor the next generation?`,
     admin: `Welcome, Admin. Here's your institution overview.`,
@@ -55,13 +55,7 @@ export function Dashboard({ user }: DashboardProps) {
             </div>
             <div className="flex items-center space-x-4">
               {userType === 'student' && (
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-lg p-3 shadow-md">
-                  <Flame className="h-6 w-6 text-orange-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-orange-800">{streakDays} Day Streak</p>
-                    <p className="text-xs text-orange-600">Keep it up!</p>
-                  </div>
-                </div>
+                <StreakAnimation userId={user.id} />
               )}
               {(userType === 'alumni' || userType === 'faculty') && (
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-100 to-amber-100 rounded-lg p-3 shadow-md">
